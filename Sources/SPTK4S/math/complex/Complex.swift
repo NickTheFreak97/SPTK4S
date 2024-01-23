@@ -1,32 +1,24 @@
 import Foundation
-import Accelerate
 
 public final class Complex: Equatable, Hashable, CustomStringConvertible {
     public var description: String {
         return "(\(self.realp()) \(self.imagp() >= 0 ? "+" : "-") \(Swift.abs(self.imagp())))"
     }
     
-    private var realDA: [Double]
-    private var imagDA: [Double]
+    private var real: Double
+    private var imag: Double
     
-    private var wrapped: DSPDoubleSplitComplex!
 
     public static func == (_ lhs: Complex, _ rhs: Complex) -> Bool {
-        return lhs.wrapped.realp[0] == rhs.wrapped.imagp[0] && lhs.wrapped.realp[0] == rhs.wrapped.realp[0]
+        return lhs.real == rhs.real && lhs.imag == rhs.imag
     }
 
     /**
      * Constructs a {@code Complex} number with real and imaginary part equal to zero.
      */
     public init() {
-        realDA = [0.0]
-        imagDA = [0.0]
-        
-        realDA.withUnsafeMutableBufferPointer { realpPtr in
-            imagDA.withUnsafeMutableBufferPointer { imagpPtr in
-                self.wrapped = DSPDoubleSplitComplex(realp: realpPtr.baseAddress!, imagp: imagpPtr.baseAddress!)
-            }
-        }
+        self.real = 0.0
+        self.imag = 0.0
     }
 
     /**
@@ -36,22 +28,16 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
      * @param imag The imaginary part of the complex number.
      */
     public init(real: Double, imag: Double) {
-        realDA = [real]
-        imagDA = [imag]
-        
-        realDA.withUnsafeMutableBufferPointer { realpPtr in
-            imagDA.withUnsafeMutableBufferPointer { imagpPtr in
-                self.wrapped = DSPDoubleSplitComplex(realp: realpPtr.baseAddress!, imagp: imagpPtr.baseAddress!)
-            }
-        }
+        self.real = real
+        self.imag = imag
     }
     
     public final func realp() -> Double {
-        return self.wrapped.realp[0]
+        return self.real
     }
     
     public final func imagp() -> Double {
-        return self.wrapped.imagp[0]
+        return self.imag
     }
 
     /**
@@ -59,14 +45,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
      * @param c The Complex number to be copied.
      */
     public init(c: Complex) {
-        realDA = [c.realp()]
-        imagDA = [c.imagp()]
-        
-        realDA.withUnsafeMutableBufferPointer { realpPtr in
-            imagDA.withUnsafeMutableBufferPointer { imagpPtr in
-                self.wrapped = DSPDoubleSplitComplex(realp: realpPtr.baseAddress!, imagp: imagpPtr.baseAddress!)
-            }
-        }
+        self.real = c.real
+        self.imag = c.imag
     }
 
     /**
@@ -254,6 +234,16 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
     }
 
     /**
+     * Addition of complex numbers as + operator.
+     *
+     * @param c The complex number to add.
+     * @return The complex number + {@code c}.
+     */
+    public static func +(_ lhs: Complex, _ rhs: Complex) -> Complex {
+        return lhs.add(rhs)
+    }
+    
+    /**
      * Addition of a complex number and a real number.
      *
      * @param d The real number to add.
@@ -265,6 +255,28 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         return result
     }
 
+    
+    /**
+     * Addition of a complex number and a real number as a + operator. Real is rhs.
+     *
+     * @param d The real number to add.
+     * @return The complex number + {@code d}.
+     */
+    public static func +(_ lhs: Complex, _ rhs: Double) -> Complex {
+        return lhs.add(rhs)
+    }
+    
+    /**
+     * Addition of a complex number and a real number as a + operator. Real is lhs.
+     *
+     * @param d The real number to add.
+     * @return The complex number + {@code d}.
+     */
+    public static func +(_ lhs: Double, _ rhs: Complex) -> Complex {
+        return rhs + lhs
+    }
+
+    
     /**
      * Addition of complex numbers.
      *
@@ -288,8 +300,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         var selfCopy = SPTK4S.Complex(c: self)
         Complex.addOp(&selfCopy, c)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -302,8 +314,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         var selfCopy = SPTK4S.Complex(c: self)
         Complex.addOp(&selfCopy, d)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -317,8 +329,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         var selfCopy = SPTK4S.Complex(c: self)
         Complex.addOp(&selfCopy, real, imag)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -332,6 +344,17 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         Complex.subtractOp(&result, c)
         return result
     }
+    
+    /**
+     * Subtraction of complex numbers as - operator.
+     *
+     * @param c Complex number to subtract.
+     * @return The complex number - {@code c}.
+     */
+    public static func -(_ lhs: Complex, _ rhs: Complex) -> Complex {
+        return lhs.subtract(rhs)
+    }
+    
 
     /**
      * Subtraction of a complex number and a real number.
@@ -344,7 +367,27 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         Complex.subtractOp(&result, d)
         return result
     }
-
+    
+    /**
+     * Subtraction of a complex number and a real number as - operator. Real is rhs.
+     *
+     * @param d Real number to subtract.
+     * @return The complex number - {@code d}.
+     */
+    public static func -(_ lhs: Complex, _ rhs: Double) -> Complex {
+        return lhs.subtract(rhs)
+    }
+    
+    /**
+     * Subtraction of a complex number and a real number as - operator. Real is lhs.
+     *
+     * @param d Real number to subtract.
+     * @return The complex number - {@code d}.
+     */
+    public static func -(_ lhs: Double, _ rhs: Complex) -> Complex {
+        return rhs - lhs
+    }
+    
     /**
      * Subtraction in place. <br>
      * Performs the equivalent of {@code Complex a -= Complex c}.
@@ -355,8 +398,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         var selfCopy = SPTK4S.Complex(c: self)
         Complex.subtractOp(&selfCopy, c)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -369,8 +412,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         var selfCopy = SPTK4S.Complex(c: self)
         Complex.subtractOp(&selfCopy, d)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -384,6 +427,15 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         return result
     }
 
+    /**
+     * Complex number multiplication as * operator.
+     * @param c The Complex number to multiply.
+     * @return The Complex number * {@code c}.
+     */
+    public static func *(_ lhs: Complex, _ rhs: Complex) -> Complex {
+        return lhs.multiply(rhs)
+    }
+    
     /**
      * Complex number multiplication.
      * @param real Real part of the number to multiply.
@@ -406,6 +458,24 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         Complex.multiplyOp(&result, d);
         return result
     }
+    
+    /**
+     * Complex number multiplication as * operator. Real is rhs.
+     * @param d The real number to add.
+     * @return The Complex number + {@code d}.
+     */
+    public static func *(_ lhs: Complex, _ rhs: Double) -> Complex {
+        return lhs.multiply(rhs)
+    }
+    
+    /**
+     * Complex number multiplication as * operator. Real is rhs.
+     * @param d The real number to add.
+     * @return The Complex number + {@code d}.
+     */
+    public static func *(_ lhs: Double, _ rhs: Complex) -> Complex {
+        return Complex.fromReal(d: lhs) * rhs
+    }
 
     /**
      * Multiplication in place. <br>
@@ -418,8 +488,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
 
         Complex.multiplyOp(&selfCopy, c)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -433,8 +503,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
 
         Complex.multiplyOp(&selfCopy, real, imag)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -447,8 +517,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
 
         Complex.multiplyOp(&selfCopy, d)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -472,6 +542,15 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         Complex.multiplyOp(&result, 1.0 / d)
         return result;
     }
+    
+    /**
+     * Complex number division as / operator.
+     * @param d The real number to add.
+     * @return The Complex number + {@code d}.
+     */
+    public static func /(_ lhs: Complex, _ rhs: Complex) -> Complex {
+        return lhs.divide(rhs)
+    }
 
     /**
      * Division in place. <br>
@@ -484,8 +563,8 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         var selfCopy = Complex(c: self)
         Complex.multiplyOp(&selfCopy, result)
         
-        self.wrapped.realp[0] = selfCopy.realp()
-        self.wrapped.imagp[0] = selfCopy.imagp()
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
     }
 
     /**
@@ -689,37 +768,37 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
 
     private static func invertOp(_ c: Complex) -> Void {
         let mag = 1.0 / c.norm();
-        c.wrapped.realp[0] *= mag;
-        c.wrapped.imagp[0] *= -mag;
+        c.real *= mag;
+        c.imag *= -mag;
     }
 
     private static func addOp(_ c: inout Complex, _ d: Double) -> Void {
-        c.wrapped.realp[0] += d;
+        c.real += d;
     }
 
     private static func addOp(_ c: inout Complex, _ real: Double, _ imag: Double) -> Void {
-        c.wrapped.realp[0] += real;
-        c.wrapped.imagp[0] += imag;
+        c.real += real;
+        c.imag += imag;
     }
 
     /*
      C1 <- C1 + C2
      */
     private static func addOp(_ c1: inout Complex, _ c2: Complex) -> Void {
-        c1.wrapped.realp[0] += c2.realp();
-        c1.wrapped.imagp[0] += c2.imagp();
+        c1.real += c2.realp();
+        c1.imag += c2.imagp();
     }
 
     private static func subtractOp(_ c: inout Complex, _ d: Double) -> Void {
-        c.wrapped.realp[0] -= d;
+        c.real -= d;
     }
 
     /*
      C1 <- C1 - C2
      */
     private static func subtractOp(_ c1: inout Complex, _ c2: Complex) -> Void {
-        c1.wrapped.realp[0] -= c2.realp();
-        c1.wrapped.imagp[0] -= c2.imagp();
+        c1.real -= c2.realp();
+        c1.imag -= c2.imagp();
     }
 
     /*
@@ -727,18 +806,18 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
      */
     private static func multiplyOp(_ c1: inout Complex, _ c2: Complex) -> Void {
         let re = c1.realp() * c2.realp() - c1.imagp() * c2.imagp();
-        c1.wrapped.realp[0] = c1.realp() * c2.realp() + c1.imagp() * c2.imagp();
-        c1.wrapped.imagp[0] = re;
+        c1.real = c1.realp() * c2.realp() + c1.imagp() * c2.imagp();
+        c1.imag = re;
     }
 
     private static func multiplyOp(_ c1: inout Complex, _ real: Double, _ imag: Double) -> Void {
         let re = c1.realp() * real - c1.imagp() * imag;
-        c1.wrapped.imagp[0] = c1.realp() * imag + c1.imagp() * real;
-        c1.wrapped.realp[0] = re;
+        c1.imag = c1.realp() * imag + c1.imagp() * real;
+        c1.real = re;
     }
 
     private static func multiplyOp(_ c: inout Complex, _ d: Double) -> Void {
-        c.wrapped.realp[0] *= d;
-        c.wrapped.imagp[0] *= d;
+        c.real *= d;
+        c.real *= d;
     }
 }

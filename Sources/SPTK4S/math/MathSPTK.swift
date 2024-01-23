@@ -218,7 +218,7 @@ public final class MathSPTK {
         realMantissa = Double(mantissa);
 
         // normalize
-        while (realMantissa > 1.0) {
+        while (realMantissa >= 1.0) {
             mantissa >>= 1;
             realMantissa /= 2.0;
             exponent += 1;

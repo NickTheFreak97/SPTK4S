@@ -1,5 +1,4 @@
 import Foundation
-import Accelerate
 
 public final class MathSPTK {
     private init() {}

@@ -303,6 +303,18 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         self.real = selfCopy.realp()
         self.imag = selfCopy.imagp()
     }
+    
+    /**
+     * Addition in place as += operator. <br>
+     * Performs the equivalent of {@code Complex a += Complex c}.
+     *
+     * @param c Complex number to add.
+     */
+    @discardableResult public static func +=(_ lhs: inout Complex, _ rhs: Complex) -> Complex {
+        lhs = lhs + rhs
+        return lhs
+    }
+    
 
     /**
      * Addition in place. <br>
@@ -316,6 +328,17 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         
         self.real = selfCopy.realp()
         self.imag = selfCopy.imagp()
+    }
+    
+    /**
+     * Addition in place. <br>
+     * Performs the equivalent of {@ code Complex a += d}.
+     *
+     * @param d The real number to add.
+     */
+    @discardableResult public static func +=(_ lhs: inout Complex, _ rhs: Double) -> Complex {
+        lhs = lhs + rhs
+        return lhs
     }
 
     /**
@@ -403,6 +426,17 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
     }
 
     /**
+     * Subtraction in place as -= operator. <br>
+     * Performs the equivalent of {@code Complex a -= Complex c}.
+     *
+     * @param c Complex number to subtract.
+     */
+    @discardableResult public static func -= (_ lhs: inout Complex, _ rhs: Complex) -> Complex {
+        lhs = lhs - rhs
+        return lhs
+    }
+    
+    /**
      * Subtraction in place. <br>
      * Performs the equivalent of {@code Complex a -= d}.
      *
@@ -414,6 +448,17 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         
         self.real = selfCopy.realp()
         self.imag = selfCopy.imagp()
+    }
+    
+    /**
+     * Subtraction in place as -= operator. <br>
+     * Performs the equivalent of {@code Complex a -= d}.
+     *
+     * @param d Real number to subtract.
+     */
+    @discardableResult public static func -= (_ lhs: inout Complex, _ rhs: Double) -> Complex {
+        lhs = lhs - rhs
+        return lhs
     }
 
     /**
@@ -491,6 +536,17 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         self.real = selfCopy.realp()
         self.imag = selfCopy.imagp()
     }
+    
+    /**
+     * Multiplication in place as *= operator. <br>
+     * Performs the equivalent of {@code Complex a *= c}.
+     *
+     * @param c The Complex number to multiply.
+     */
+    @discardableResult public static func *= (_ lhs: inout Complex, _ rhs: Complex) -> Complex {
+        lhs = lhs * rhs
+        return lhs
+    }
 
     /**
      * Multiplication in place. <br>
@@ -520,7 +576,17 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
         self.real = selfCopy.realp()
         self.imag = selfCopy.imagp()
     }
-
+    
+    /**
+     * Multiplication in place as *= operator. <br>
+     * Performs the equivalent of {@code Complex a *= d}.
+     * @param d The real number to multiply
+     */
+    @discardableResult public static func *= (_ lhs: inout Complex, _ rhs: Double) -> Complex {
+        lhs = lhs * rhs
+        return lhs
+    }
+    
     /**
      * Complex number division.
      * @param c The Complex number to divide.
@@ -548,7 +614,7 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
      * @param d The real number to add.
      * @return The Complex number + {@code d}.
      */
-    public static func /(_ lhs: Complex, _ rhs: Complex) -> Complex {
+    public static func / (_ lhs: Complex, _ rhs: Complex) -> Complex {
         return lhs.divide(rhs)
     }
 
@@ -568,6 +634,17 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
     }
 
     /**
+     * Division in place as /= operator. <br>
+     * Performs the equivalent of {@code Complex a /= c}.
+     *
+     * @param c The Complex number to divide.
+     */
+    @discardableResult public static func /= (_ lhs: inout Complex, _ rhs: Complex) -> Complex {
+        lhs = lhs / rhs
+        return lhs
+    }
+    
+    /**
      * Division in place. <br>
      * Performs the equivalent of {@code Complex a /= d}.
      *
@@ -576,6 +653,20 @@ public final class Complex: Equatable, Hashable, CustomStringConvertible {
     public func divideEquals(_ d: Double) {
         var selfCopy = Complex(c: self)
         Complex.multiplyOp(&selfCopy, 1.0 / d)
+        
+        self.real = selfCopy.realp()
+        self.imag = selfCopy.imagp()
+    }
+    
+    /**
+     * Division in place. <br>
+     * Performs the equivalent of {@code Complex a /= d}.
+     *
+     * @param d The real number to divide.
+     */
+    @discardableResult public static func /= (_ lhs: inout Complex, _ rhs: Double) -> Complex {
+        lhs.divideEquals(rhs)
+        return lhs
     }
 
     /**

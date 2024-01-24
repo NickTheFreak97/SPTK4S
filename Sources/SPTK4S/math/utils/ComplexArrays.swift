@@ -224,7 +224,7 @@ public final class ComplexArrays {
         
         for row in complex2DArray {
             if row.count != columns {
-                throw ComplexArrayError.illegalArgumentException(reason: "All rows must have the same length.")
+                throw ComplexArraysError.illegalArgumentException(reason: "All rows must have the same length.")
             }
             
             result.append(contentsOf: row)
@@ -523,7 +523,7 @@ public final class ComplexArrays {
 
 }
  
-enum ComplexArrayError: Error {
+enum ComplexArraysError: Error {
     case illegalArgumentException(reason: String)
 }
 

@@ -15,6 +15,11 @@ public final class DimensionCheckers {
         }
     }
 
+    public static func checkXYDimensions(_ x: DSPCountedDoubleSplitComplex, _ y: DSPCountedDoubleSplitComplex) throws {
+        if (x.count() != y.count()) {
+            throw DimensionError.illegalArgumentException(reason: "x and y dimensions must be the same")
+        }
+    }
 
     public static func checkMinXLength(_ x: [Double], minLength: Int) throws {
         if (x.count < minLength) {

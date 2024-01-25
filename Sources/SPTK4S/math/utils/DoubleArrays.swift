@@ -477,6 +477,20 @@ public final class DoubleArrays {
     }
     
     
+    /// Sorts the array in place.
+    ///
+    /// - Parameter doubleArray: The input array.
+    public static func sort(_ doubleArray: inout [Double], ascending: Bool = true) {
+        
+        doubleArray.withUnsafeMutableBufferPointer { sourcePtr in
+            vDSP_vsortD(
+                /*arrayToSortPtr:*/ sourcePtr.baseAddress!,
+                /*elementsToProcess:*/ vDSP_Length(doubleArray.count),
+                /*ascending:*/ ascending ? 1 : -1
+            )
+        }
+    }
+
 
     /// Returns the indices that would sort an array.
     ///
@@ -1350,7 +1364,7 @@ public final class DoubleArrays {
     }
     
     
-    /// Computes the log2 of every element of the array
+    /// Computes the log10 of every element of the array
     ///
     /// - Parameter doubleArray: The input array.
     /// - Returns: `[e^doubleArray[0], ..., e^doubleArray[n]]
@@ -1404,10 +1418,11 @@ public final class DoubleArrays {
                 vvfabs(sourcePtr.baseAddress!, resultPtr.baseAddress!, &itemsCount)
             }
         }
-        
-        
+            
         return output
     }
+    
+    
 }
 
 

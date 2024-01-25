@@ -481,14 +481,17 @@ public final class DoubleArrays {
     ///
     /// - Parameter doubleArray: The input array.
     public static func sort(_ doubleArray: inout [Double], ascending: Bool = true) {
+        var sourceArray = doubleArray
         
-        doubleArray.withUnsafeMutableBufferPointer { sourcePtr in
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
             vDSP_vsortD(
                 /*arrayToSortPtr:*/ sourcePtr.baseAddress!,
                 /*elementsToProcess:*/ vDSP_Length(doubleArray.count),
                 /*ascending:*/ ascending ? 1 : -1
             )
         }
+        
+        doubleArray = sourceArray
     }
 
 
@@ -1327,7 +1330,7 @@ public final class DoubleArrays {
     /// Computes the log_e of every element of the array
     ///
     /// - Parameter doubleArray: The input array.
-    /// - Returns: `[e^doubleArray[0], ..., e^doubleArray[n]]
+    /// - Returns: `[log_e(doubleArray[0]), ..., log_e(doubleArray[n])]
     public static func log_e(_ doubleArray: [Double]) -> [Double] {
         var output = [Double].init(repeating: 0.0, count: doubleArray.count)
         var sourceArray = doubleArray
@@ -1347,7 +1350,7 @@ public final class DoubleArrays {
     /// Computes the log2 of every element of the array
     ///
     /// - Parameter doubleArray: The input array.
-    /// - Returns: `[e^doubleArray[0], ..., e^doubleArray[n]]
+    /// - Returns: `[log2(doubleArray[0]), ..., log2(doubleArray[n])]
     public static func log_2(_ doubleArray: [Double]) -> [Double] {
         var output = [Double].init(repeating: 0.0, count: doubleArray.count)
         var sourceArray = doubleArray
@@ -1367,7 +1370,7 @@ public final class DoubleArrays {
     /// Computes the log10 of every element of the array
     ///
     /// - Parameter doubleArray: The input array.
-    /// - Returns: `[e^doubleArray[0], ..., e^doubleArray[n]]
+    /// - Returns: `[log10(doubleArray[0]), ..., log10(doubleArray[n])]
     public static func log_10(_ doubleArray: [Double]) -> [Double] {
         var output = [Double].init(repeating: 0.0, count: doubleArray.count)
         var sourceArray = doubleArray
@@ -1423,6 +1426,50 @@ public final class DoubleArrays {
     }
     
     
+    /// Returns the index where `target` is located, if present in the array. The location where it would be if it was contained in the array, otherwise.
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Parameter target: The value to search.
+    ///
+    /// - Returns: `i | doubleArray[i] == target` if `target ∈ doubleArray`, the location where to insert it otherwise.
+    public static func binarySearch(_ doubleArray: [Double], target: Double) -> Int {
+        var LBound = 0
+        var UBound = doubleArray.count - 1
+
+        while LBound <= UBound {
+             let middle = (LBound + UBound) / 2
+             if doubleArray[middle] == target {
+                return middle
+             } else if doubleArray[middle] < target {
+                LBound = middle + 1
+             } else {
+                UBound = middle - 1
+             }
+          }
+        
+        return (LBound + UBound)/2
+    }
+    
+
+    /// Deep copies the input array.
+    ///
+    /// - Parameter doubleArray: The array to copy.
+    /// - Returns: A newly created array containing `[doubleArray[0], ..., doubleArray[n]]`
+    public static func deepCopy(_ doubleArray: [Double]) -> [Double] {
+        var copy = [Double].init(repeating: 0.0, count: doubleArray.count)
+        
+        copy.withUnsafeMutableBufferPointer { copyPtr in
+            cblas_dcopy(
+                /*#elements:*/ Int32(doubleArray.count),
+                /*sourceArray:*/ doubleArray,
+                /*sourceArrayStride:*/ Int32(1),
+                /*destArrayPtr:*/ copyPtr.baseAddress!,
+                /*destArrayStride:*/ Int32(1)
+            )
+        }
+        
+        return copy
+    }
 }
 
 

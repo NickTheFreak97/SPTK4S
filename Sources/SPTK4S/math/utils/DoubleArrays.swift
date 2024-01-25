@@ -967,12 +967,6 @@ public final class DoubleArrays {
     }
 
 
-    /**
-     * Outer product of two arrays.
-     * @param a The first array.
-     * @param b The second array.
-     * @return {@code output[i, j] = a[i] * b[j]}.
-     */
     /// Outer product of two arrays.
     ///
     /// - Parameter doubleArray1: The left-hand array.
@@ -994,12 +988,6 @@ public final class DoubleArrays {
     }
     
     
-    /**
-     * Dot product between two arrays.
-     * @param a The first array.
-     * @param b The second array.
-     * @return The dot (inner) product of arrays {@code a} and {@code b}.
-     */
     /// Dot product between two arrays
     ///
     /// - Parameter doubleArray1: The left-hand array.
@@ -1039,6 +1027,7 @@ public final class DoubleArrays {
         
         return product
     }
+    
 
     /// Checks if all elements of the array are close numerically to a given target.
     ///
@@ -1059,16 +1048,6 @@ public final class DoubleArrays {
     }
 
     
-    /**
-     * Checks if all elements of the array are close numerically to a given target.
-     *
-     * @param a The input array.
-     * @param target The target value.
-     * @param absTol The absolute tolerance.
-     * @param relTol The relative tolerance.
-     * @return {@code true} if all the values in the array are close to the given target, {@code false} otherwise.
-     * @see MathETK#isClose(double, double, double, double) isClose(double, double, double, double).
-     */
     /// Checks if all elements of the array are close numerically to a given target.
     ///
     /// - Parameter doubleArray: The input array.
@@ -1098,12 +1077,6 @@ public final class DoubleArrays {
     }
 
     
-    /**
-     * Transpose a 2d array.
-     * @param a The array to transpose.
-     * @return The transposed array.
-     * @see <a href="https://stackoverflow.com/a/17634025/6383857">Transpose 2d array</a>
-     */
     /// Transpose a 2d array.
     ///
     /// - Parameter twoDDoubleArray: The array to transpose.
@@ -1133,7 +1106,308 @@ public final class DoubleArrays {
             return result
         }
     }
-
+    
+    
+    /// Transpose a matrix represented as a linear array.
+    ///
+    /// - Parameter doubleArray: The array to transpose.
+    /// - Parameter columns: The number of columns of the array.
+    /// - Returns: The transposed array.
+    ///
+    /// - Throws: `DoubleArraysError.illegalArgumentException(_:String)` if `doubleArray.count / columns` is not an integer.
+    public static func transpose(_ doubleArray: [Double], columns: Int) throws -> [Double] {
+        if doubleArray.count <= 0 {
+            return doubleArray
+        } else {
+            let rowsCount = doubleArray.count/columns
+            
+            if Double(doubleArray.count)/Double(columns) != Double(rowsCount) {
+                throw DoubleArraysError.illegalArgumentException(reason: "doubleArray.count / columns must be an integer")
+            }
+            
+            var transposed = [Double].init(repeating: 0.0, count: doubleArray.count)
+            
+            transposed.withUnsafeMutableBufferPointer { transposedPtr in
+                vDSP_mtransD(
+                    /*sourceArray:*/ doubleArray,
+                    /*sourceArrayStride:*/ 1,
+                    /*transposedPtr:*/ transposedPtr.baseAddress!,
+                    /*transposedStride:*/ 1,
+                    /*outputRows:*/ vDSP_Length(columns),
+                    /*outputColumns:*/ vDSP_Length(rowsCount)
+                )
+            }
+ 
+            return transposed
+        }
+    }
+    
+    
+    /// Zero-pads the array with the specified amount of leading and trailing zeros
+    ///
+    /// - Parameter doubleArray: The input array,
+    /// - Parameter leadingZeros: The number of zeros before `doubleArray[0]` in the output array.
+    /// - Parameter trailingZeros: The number of zeros after `doubleArray.last` in the output array.
+    public static func zeroPad(_ doubleArray: [Double], leadingZeros: Int, trailingZeros: Int) -> [Double] {
+        
+        precondition(leadingZeros >= 0 && trailingZeros >= 0)
+        var output = [Double].init(repeating: 0.0, count: leadingZeros + doubleArray.count + trailingZeros)
+        
+        output.withUnsafeMutableBufferPointer { outputPtr in
+            cblas_dcopy(
+                /*#elements:*/ Int32(leadingZeros),
+                /*sourceArray:*/ doubleArray,
+                /*sourceArrayStride:*/ Int32(1),
+                /*destArrayPtr:*/ outputPtr.baseAddress!.advanced(by: leadingZeros),
+                /*destArrayStride:*/ Int32(1)
+            )
+        }
+         
+        return output
+    }
+    
+    
+    /// An array of `count` zeros.
+    ///
+    /// - Parameter count: The number of zeros in the output array.
+    /// - Returns: An array with `count` 0.0d
+    public static func zeros(count: Int) -> [Double] {
+        return [Double].init(repeating: 0.0, count: count)
+    }
+    
+    
+    /// Computes the sin of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[sin(doubleArray[0]), ..., sin(doubleArray[n])]
+    public static func sin(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvsin(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the sinh of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[sinh(doubleArray[0]), ..., sinh(doubleArray[n])]
+    public static func sinh(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvsinh(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the cos of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[cos(doubleArray[0]), ..., cos(doubleArray[n])]
+    public static func cos(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvcos(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the cosh of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[cosh(doubleArray[0]), ..., cosh(doubleArray[n])]
+    public static func cosh(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvcosh(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the tan of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[tan(doubleArray[0]), ..., tan(doubleArray[n])]
+    public static func tan(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvtan(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the tanh of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[tanh(doubleArray[0]), ..., tang(doubleArray[n])]
+    public static func tanh(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvtanh(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the exp of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[e^doubleArray[0], ..., e^doubleArray[n]]
+    public static func exp(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvexp(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the log_e of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[e^doubleArray[0], ..., e^doubleArray[n]]
+    public static func log_e(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvlog(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the log2 of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[e^doubleArray[0], ..., e^doubleArray[n]]
+    public static func log_2(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvlog2(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the log2 of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[e^doubleArray[0], ..., e^doubleArray[n]]
+    public static func log_10(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvlog10(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the sqrt of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[√doubleArray[0], ..., √doubleArray[n]]
+    public static func sqrt(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvsqrt(resultPtr.baseAddress!, sourcePtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        return output
+    }
+    
+    
+    /// Computes the absolute value of every element of the array
+    ///
+    /// - Parameter doubleArray: The input array.
+    /// - Returns: `[|doubleArray[0]|, ..., |doubleArray[n]|]
+    public static func abs(_ doubleArray: [Double]) -> [Double] {
+        var output = [Double].init(repeating: 0.0, count: doubleArray.count)
+        var sourceArray = doubleArray
+        var itemsCount = Int32(doubleArray.count)
+        
+        
+        sourceArray.withUnsafeMutableBufferPointer { sourcePtr in
+            output.withUnsafeMutableBufferPointer { resultPtr in
+                vvfabs(sourcePtr.baseAddress!, resultPtr.baseAddress!, &itemsCount)
+            }
+        }
+        
+        
+        return output
+    }
 }
 
 

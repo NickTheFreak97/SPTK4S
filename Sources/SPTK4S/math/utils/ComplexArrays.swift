@@ -35,37 +35,6 @@ public final class ComplexArrays {
         return result;
     }
     
-
-    /// Convolve two arrays.
-    ///
-    /// - Parameter a: the left hand array.
-    /// - Parameter b: the right hand array
-    ///
-    /// - Returns The convolution of `a` and `b`.
-    public static func convolve(_ a: inout DSPCountedDoubleSplitComplex, b: inout DSPCountedDoubleSplitComplex) -> DSPCountedDoubleSplitComplex {
-        var signal = a.splitComplexD()
-        var filter = b.splitComplexD()
-        
-        let outputCount = a.count() - b.count() + 1
-        let outputReal = UnsafeMutableBufferPointer<Double>.allocate(capacity: outputCount)
-        let outputImag = UnsafeMutableBufferPointer<Double>.allocate(capacity: outputCount)
-        
-        var output = DSPDoubleSplitComplex(realp: outputReal.baseAddress!, imagp: outputImag.baseAddress!)
-        
-       vDSP_zconvD(
-            /*a:*/ &signal,
-            /*aStride:*/ 1,
-            /*f:*/ &filter,
-            /*fStride:*/ -1,
-            /*c:*/ &output,
-            /*cStride:*/ 1,
-            /*outputCount:*/ vDSP_Length(outputCount),
-            /*fCount:*/ vDSP_Length(a.count())
-        )
-        
-        return DSPCountedDoubleSplitComplex(wrappedComplex: output, counts: outputCount)
-    }
-    
     
     
     static let MOD: Int = 998244353;
@@ -132,7 +101,7 @@ public final class ComplexArrays {
     /// - Parameter realsArray: The real parts of the array of Complex to be created.
     /// - Parameter imagsArray: The imaginary parts of the array of Complex to be created.
     ///
-    /// - Returns: `[Complex(real: realsArray[0], imag: imagsArray[0]), ... [Complex(real: realsArray[n], imag: imagsArray[n])]`
+    /// - Returns: `[Complex(real: realsArray[0], imag: imagsArray[0]), ... Complex(real: realsArray[n], imag: imagsArray[n])]`
     /// - Throws: `DimensionError.illegalArgumentException(_: String)` if `realsArray` and `imagsArray` sizes don't match.
     public static func zip(_ realsArray: [Double], _ imagsArray: [Double]) throws -> [Complex] {
         try DimensionCheckers.checkXYDimensions(realsArray, imagsArray)
@@ -149,30 +118,6 @@ public final class ComplexArrays {
         }
 
         return zipped;
-    }
-    
-    /// Convert and array representing the real part of an array of Complex number and another array representing the imaginary part of an array of Complex into an array of Complex numbers.
-    ///
-    /// - Parameter realsArray: The real parts of the array of Complex to be created.
-    /// - Parameter imagsArray: The imaginary parts of the array of Complex to be created.
-    ///
-    /// - Returns: `[Complex(real: realsArray[0], imag: imagsArray[0]), ... [Complex(real: realsArray[n], imag: imagsArray[n])]`
-    /// - Throws: `DimensionError.illegalArgumentException(_: String)` if `realsArray` and `imagsArray` sizes don't match.
-    ///
-    /// - Note: The memory returned along with the output is unmanaged and must be handled by the client, including deallocation.
-    public static func zip(_ realsArray: [Double], _ imagsArray: [Double]) throws -> DSPCountedDoubleSplitComplex {
-        try DimensionCheckers.checkXYDimensions(realsArray, imagsArray)
-        
-        let realPtr = UnsafeMutablePointer<Double>.allocate(capacity: realsArray.count)
-        let imagPtr = UnsafeMutablePointer<Double>.allocate(capacity: imagsArray.count)
-        
-        realPtr.initialize(from: realsArray, count: realsArray.count)
-        imagPtr.initialize(from: imagsArray, count: imagsArray.count)
-        
-        return DSPCountedDoubleSplitComplex(
-            wrappedComplex: DSPDoubleSplitComplex(realp: realPtr, imagp: imagPtr),
-            counts: realsArray.count
-        )
     }
     
 
@@ -195,7 +140,7 @@ public final class ComplexArrays {
         )
     }
 
-    
+        
     /// Creates and array of 0 + j0
     ///
     /// - Parameter length: The length of the array of zeros.
@@ -206,8 +151,7 @@ public final class ComplexArrays {
         return [SPTK4S.Complex].init(repeating: SPTK4S.Complex(), count: length)
     }
 
-    
-    
+        
     /// Flattens a 2D array into a 1D array by copying every row of the second array into the first array
     ///
     ///     let a = {{1, 2, 3}, {4, 5, 6}};
@@ -249,6 +193,7 @@ public final class ComplexArrays {
 
         return result;
     }
+    
 
     /// Add a Complex value to an array of Complex values, element wise.
     /// - Parameter complexArray1: The input array.
@@ -267,6 +212,7 @@ public final class ComplexArrays {
         
         return result;
     }
+    
     
     /// Add a Complex value to an array of Complex values, element wise.
     /// - Parameter complexArray1: The input array.
@@ -462,43 +408,7 @@ public final class ComplexArrays {
         return result
     }
 
-    
-    /// Subtract a Complex value from an array of Complex values element wise.
-    ///
-    /// - Parameter complexArray1: The left-hand array.
-    /// - Parameter complesArray2: The right-hand array.
-    ///
-    /// - Returns: `complexArray1 - complexArray2`.
-    /// - Throws: `DimensionError.illegalArgumentException(_:String)` if `complexArray1` and `complexArray2` sizes mismatch.
-    public static func subtractElementWise(
-        _ complexArray1: DSPCountedDoubleSplitComplex,
-        _ complexArray2: DSPCountedDoubleSplitComplex
-    ) throws -> DSPCountedDoubleSplitComplex {
-        try DimensionCheckers.checkXYDimensions(complexArray1, complexArray2)
-
-        let outputCapacity = complexArray1.count()
         
-        let resultReal = UnsafeMutableBufferPointer<Double>.allocate(capacity: complexArray1.count())
-        let resultImag = UnsafeMutableBufferPointer<Double>.allocate(capacity: complexArray1.count())
-
-        var output = DSPDoubleSplitComplex(realp: resultReal.baseAddress!, imagp: resultImag.baseAddress!)
-        
-        var complexArray1 = complexArray1.splitComplexD()
-        var complexArray2 = complexArray2.splitComplexD()
-                
-        vDSP_zvsubD(
-            /*firstInput: */ &complexArray1,
-            /*input1Stride: */1,
-            /*secondInput: */&complexArray2,
-            /*input2Stride: */1,
-            /*output: */&output,
-            /*outputStride: */1,
-            /*itemsToProcess: */ vDSP_Length(outputCapacity)
-        )
-        
-        return DSPCountedDoubleSplitComplex(wrappedComplex: output, counts: outputCapacity)
-    }
-    
     /// Splits an array of Complex into two arrays of the same sizes containing the real and imaginary parts.
     ///
     /// - Parameter complexArray: The input array.

@@ -21,7 +21,7 @@ public final class Extrapolators {
         /// Extrapolation.
         ///
         /// - Parameter at: Argument at which to evaluate the extrapolation.
-        /// - Returns: `y0` if `x < x0`, `yn` if `x > xn`
+        /// - Returns: `y0` if `at < x0`, `yn` if `at > xn`
         /// - Throws: `ExtrapolationError.illegalArgumentException(_:String)` if `at ∈[x0, xn]`
         public func extrapolate(at: Double) throws -> Double {
             if at < x0 {
@@ -30,7 +30,9 @@ public final class Extrapolators {
                 if at > xn {
                     return yn
                 } else {
-                    throw ExtrapolationError.illegalArgumentException(reason: "\(at) is not outside [\(x0), \(xn)]")
+                    throw ExtrapolationError.illegalArgumentException(
+                        reason: "\(at) is not outside [\(x0), \(xn)]"
+                    )
                 }
             }
         }
@@ -72,8 +74,8 @@ public final class Extrapolators {
     }
 
     
-    /// The `LinearExtrapolator` class constructs a line `y = m * (x - xi) + yi` where `m` is calculated by
-    /// differentiating the ``DifferentiableFunction``.  `(xi, yi)` are the left-hand side coordinates if x is
+    /// The `LinearExtrapolator` class constructs a line `y = m * (at - xi) + yi` where `m` is calculated by
+    /// differentiating the ``DifferentiableFunction``.  `(xi, yi)` are the left-hand side coordinates if `at` is
     /// less than the minimum value for extrapolation or the right-hand side values otherwise.
     public class LinearExtrapolator: Extrapolator {
 
@@ -108,7 +110,7 @@ public final class Extrapolators {
 
 
     /// The `NaturalExtrapolator` class evaluates the extrapolation at a function specified for the left-hand side
-    /// of the extrapolation if x is on the left-hand side of the extrapolation or evaluates the extrapolation at a
+    /// of the extrapolation if `at` is on the left-hand side of the extrapolation or evaluates the extrapolation at a
     /// function specified for the right-hand side otherwise.
     public class NaturalExtrapolator: Extrapolator {
 
@@ -133,15 +135,16 @@ public final class Extrapolators {
                 if at > xn {
                     return rightFn.evaluate(at: at)
                 } else {
-                    throw ExtrapolationError.illegalArgumentException(reason: "\(at) is not outside of [\(x0),\(xn)]")
+                    throw ExtrapolationError.illegalArgumentException(
+                        reason: "\(at) is not outside of [\(x0),\(xn)]"
+                    )
                 }
             }
         }
     }
 
 
-    /// The `ThrowExtrapolator` class throws an `ExtrapolationError.arrayIndexOutOfBoundsException(_:String)` if x is outside of the
-    /// valid range or `ExtrapolationError.illegalArgumentException(_:String)` if x is within the allowed range.
+    /// The `ThrowExtrapolator` throws an appropriate `ExtrapolationError` upon call to `extrapolate(at:Double)`.
     public class ThrowExtrapolator: Extrapolator {
         private let x0: Double
         private let xn: Double
@@ -151,15 +154,22 @@ public final class Extrapolators {
             self.xn = xn
         }
         
-        
+        /// - Throws: `ExtrapolationError.arrayIndexOutOfBoundsException(_:String)` if `at` is outside of the allowed range.
+        /// - Throws: `ExtrapolationError.illegalArgumentException(_:String)` if `at` is within the allowed range.
         public func extrapolate(at: Double) throws -> Double {
             if at < x0 {
-                throw ExtrapolationError.arrayIndexOutOfBoundsException(reason: "\(at) is smaller than every number in [\(x0), \(xn)]")
+                throw ExtrapolationError.arrayIndexOutOfBoundsException(
+                    reason: "\(at) is smaller than every number in [\(x0), \(xn)]"
+                )
             } else {
                 if at > xn {
-                    throw ExtrapolationError.arrayIndexOutOfBoundsException(reason: "\(at) is bigger than every number in [\(x0), \(xn)]")
+                    throw ExtrapolationError.arrayIndexOutOfBoundsException(
+                        reason: "\(at) is bigger than every number in [\(x0), \(xn)]"
+                    )
                 } else {
-                    throw ExtrapolationError.illegalArgumentException(reason: "\(at) is not outside [\(x0), \(xn)]")
+                    throw ExtrapolationError.illegalArgumentException(
+                        reason: "\(at) is not outside [\(x0), \(xn)]"
+                    )
                 }
             }
         }
